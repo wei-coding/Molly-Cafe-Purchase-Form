@@ -1,0 +1,9 @@
+body {
+    background-color: rgb(252, 222, 157);
+}
+.floating {
+    background-color: white;
+    border-radius: 10px;
+    padding: 10px;
+    color: black;
+}

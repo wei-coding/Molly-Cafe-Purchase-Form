@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-tw" class="h-100">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
+    <title>控制台</title>
+    <style>
+        .bd-placeholder-img {
+            font-size: 1.125rem;
+            text-anchor: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+        }
+
+        @media (min-width: 768px) {
+            .bd-placeholder-img-lg {
+                font-size: 3.5rem;
+            }
+        }
+    </style>
+    <link href="/statics/css/cover.css" rel="stylesheet">
+    <link href="/statics/css/floating.css" rel="stylesheet">
+</head>
+
+<body class="d-flex h-100 text-center text-white bg-dark">
+
+    <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+        <header class="mb-auto">
+            <div>
+                <h3 class="float-md-start mb-0">茉莉咖啡館表單後台</h3>
+                <nav class="nav nav-masthead justify-content-center float-md-end">
+                    <a class="nav-link" aria-current="page" href="/myconsole">控制台首頁</a>
+                    <a class="nav-link active" href="/myconsole/edit">更改品項</a>
+                    <a class="nav-link" href="/myconsole/table">察看總表</a>
+                    <a class="nav-link" href="/logout">登出</a>
+                </nav>
+            </div>
+        </header>
+
+        <div class="container floating">
+            <h3>更改圖片</h3>
+            <p>請選擇該次品項數量</p>
+            <select name="items-num" id="items-num">
+                <option value="0" selected>請選擇個數</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
+            <form method="post" action="/myconsole/edit" id="edit" enctype="multipart/form-data"></form>
+        </div>
+
+        <footer class="mt-auto text-white-50">
+            <p>&copy; 2017–2021 茉莉咖啡館</p>
+        </footer>
+    </div>
+
+
+    <script>
+        fetch('/all_goods')
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (myjson) {
+                console.log(myjson);
+                var html = document.getElementById('edit');
+                html.innerHTML = '<p>本次表單有效日期</p>';
+                html.innerHTML += '<input type="date" name="exipres" id="expires"><br><br>';
+                for (var i = 0; i < myjson.length; i++) {
+                    html.innerHTML = html.innerHTML + generateForm(i);
+                    document.querySelector('#expires').setAttribute('value', myjson[i]['expires'])
+                    document.querySelector('#img-showcase-' + i).setAttribute('src', '/statics/' + myjson[i]['img']);
+                    document.querySelector('#name-' + i).setAttribute('value', myjson[i]['name']);
+                    document.querySelector('#description-' + i).innerHTML = myjson[i]['description'];
+                    document.querySelector('#limit-' + i).setAttribute('value', myjson[i]['limit']);
+                    document.querySelector('#img-uploader-' + i).setAttribute('type', 'hidden');
+                }
+            })
+
+        var num_element = document.getElementById('items-num');
+
+        num_element.addEventListener('change', function (event) {
+            if (num_element.value == 0) {
+                window.location.href = '/myconsole/edit';
+            }
+            var num = parseInt(num_element.value);
+            console.log(num);
+            var form = document.getElementById('edit');
+            form.innerHTML = '<p>本次表單有效日期</p>';
+            form.innerHTML += '<input type="date" name="exipres" id="expires"><br><br>';
+            for (var i = 0; i < num; i++) {
+                form.innerHTML += generateForm(i);
+            }
+            form.innerHTML += '<input type="hidden" name="num" value="' + num + '">';
+            form.innerHTML += '<input type="submit" value="送出">';
+            for (var i = 0; i < num; i++) {
+                console.log(i);
+                document.getElementById('img-uploader-' + i).addEventListener('change', function () {
+                    readURL(this);
+                })
+            }
+        })
+        function generateForm(i) {
+            var items_templates = '品項' + (i + 1) + '<br>' +
+                '<img id="img-showcase-' + i + '" src="#" style="max-width: 90%"><br>' +
+                '<input type="file" id="img-uploader-' + i + '" name="img-' + i + '" accept="image/png, image/jpeg"><br>' +
+                '請輸入商品品名<br>' +
+                '<input type="text" id="name-' + i + '" name="name-' + i + '" style="width: 90%;"><br>' +
+                '請輸入商品描述<br>' +
+                '<textarea id="description-' + i + '" name="description-' + i + '" style="width: 90%;"></textarea><br>' +
+                '數量限制<br>' +
+                '<input type="number" id="limit-' + i + '" name="limit-' + i + '" style="width: 90%;"><br><br>';
+            return items_templates;
+        }
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                i = input.id.split('-')[2];
+                console.log(i);
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    console.log('img-showcase-' + i)
+                    document.getElementById('img-showcase-' + i).setAttribute('src', e.target.result);
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+</body>
+
+</html>

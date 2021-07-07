@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>表單</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
+    <style>
+        .bd-placeholder-img {
+            font-size: 1.125rem;
+            text-anchor: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+        }
+
+        @media (min-width: 768px) {
+            .bd-placeholder-img-lg {
+                font-size: 3.5rem;
+            }
+        }
+    </style>
+    <link href="/statics/css/navbar.css" rel="stylesheet">
+    <link href="/statics/css/floating.css" rel="stylesheet">
+
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light rounded" aria-label="Eleventh navbar example">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">茉莉咖啡館預購系統</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample09"
+                aria-controls="navbarsExample09" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarsExample09">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/">首頁</a>
+                    </li>
+                </ul>
+                <p>
+                    <button type="button" class="btn btn-danger" id="logout">登出</button>
+                </p>
+            </div>
+        </div>
+    </nav>
+    <div class="container floating">
+        <p>{{ welcome }}</p>
+        <form action="/" method="post" enctype="multipart/form-data" id="myForm">
+            <p id="date"></p>
+            <p id="expire"></p>
+        </form><br>
+    </div>
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="toast-header">
+            <img src="/statics/images/logo.png" class="rounded me-2" alt="..." width="30vw">
+            <strong class="me-auto">收到您的訂單囉！</strong>
+            <small>幾秒鐘前</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+          <div class="toast-body">
+            我們已收到您的訂單，謝謝您的購買及支持！
+          </div>
+        </div>
+      </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+    <script>
+        var urlstring = location.href;
+        var url = new URL(urlstring);
+        var arg = url.searchParams.get('send');
+        console.log(arg);
+        if(arg) {
+            var myToastEl = document.getElementById('liveToast');
+            var myToast = bootstrap.Toast.getOrCreateInstance(myToastEl);
+            myToast.show();
+        }
+        document.getElementById('logout').addEventListener('click', function () {
+            window.location.href = '/logout';
+        })
+
+        var form = document.getElementById('myForm');
+        fetch('/all_goods')
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (myjson) {
+                console.log(myjson);
+                for (var i = 0; i < myjson.length; i++) {
+                    form.innerHTML += generateItems(myjson[i]);
+                }
+                form.innerHTML += '<input type="hidden" name="n-items" value="' + myjson.length + '">';
+                form.innerHTML += '<input type="submit" value="送出">';
+                var now = new Date();
+                document.getElementById('date').innerHTML = '資料更新時間：' + now.getFullYear() + '-' + now.getMonth() + '-' + now.getDay() +
+                    ' ' + now.getHours() + ':' + now.getMinutes();
+                fetch('/customer_data')
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (myjson) {
+                        console.log(myjson);
+                        return myjson['purchase_record'];
+                    })
+                    .then(function (record) {
+                        for (var i = 0; i < record.length; i++) {
+                            document.getElementById('num-' + i).setAttribute('value', record[i])
+                        }
+                    })
+            })
+
+        function generateItems(good) {
+            return '' +
+                '<h3>' + good['name'] + '</h3>' +
+                '<img src="/statics/' + good['img'] + '" width=600vw style="max-width: 90%"><br>' +
+                '<p>' + good['description'] + '</p>' +
+                '<p>目前剩餘數量:' + good['left'] + '</p>' +
+                '<p>請輸入要購買的數量，最多' + Math.min(10, good['left']) + '份</p>' +
+                '<p>以下數字為已填寫之數量，可直接進行修改</p>'+
+                '<input type="number" min="0" max="' + Math.min(10, good['left']) + '" id="num-' + good['items'] + '" name="num-' + good['items'] + '"><br><br>'
+        }
+    </script>
+</body>
+
+</html>
