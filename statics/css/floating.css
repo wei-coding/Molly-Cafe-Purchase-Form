@@ -6,4 +6,10 @@ body {
     border-radius: 10px;
     padding: 10px;
     color: black;
+    margin: 15px auto;
+    text-shadow: 0px;
+    opacity: 0.8;
+}
+.center {
+    margin: auto;
 }

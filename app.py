@@ -5,13 +5,17 @@ from lib.goods import GoodsManager
 
 app = Flask(__name__)
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 def index():
+    return render_template('index.html')
+
+@app.route('/form', methods=['GET', 'POST'])
+def form():
     user_hash = request.cookies.get('user')
     if request.method == 'GET':
         if user_hash is not None:
             name = search_name(user_hash)
-            return render_template('index.html', welcome=name+'先生/小姐，您好！')
+            return render_template('form.html', welcome=name+'先生/小姐，您好！')
         else:
             return redirect('/login')
     else:
@@ -36,7 +40,7 @@ def index():
                         'num-items': purchased,
                     }
                 )
-        return redirect('/?send=1')
+        return redirect('/form?send=1')
 
 @app.route('/login')
 def login():
